@@ -42,7 +42,7 @@ def place_market_order(client, market, side, size, price, reduce_only):
 
   # Get expiration time
   server_time = client.public.get_time()
-  expiration = datetime.fromisoformat(server_time.data["iso"].replace("Z", "")) + timedelta(seconds=70)
+  expiration = datetime.fromisoformat(server_time.data["iso"].replace("Z", "+00:00")) + timedelta(seconds=70)
 
   # Place an order
   placed_order = client.private.create_order(
@@ -59,7 +59,8 @@ def place_market_order(client, market, side, size, price, reduce_only):
     reduce_only=reduce_only
   )
 
-  # print(placed_order.data)
+  time.sleep(0.5)
+  print("placed order data",placed_order.data)
 
   # Return result
   return placed_order.data
@@ -83,6 +84,7 @@ def abort_all_positions(client):
   # Get all open positions
   positions = client.private.get_positions(status="OPEN")
   all_positions = positions.data["positions"]
+  print("all positions", all_positions)
 
   # Handle open positions
   close_orders = []
@@ -98,6 +100,8 @@ def abort_all_positions(client):
       side = "BUY"
       if position["side"] == "LONG":
         side = "SELL"
+      
+      print("side", side)
 
       # Get Price
       price = float(position["entryPrice"])
@@ -114,7 +118,7 @@ def abort_all_positions(client):
         accept_price,
         True
       )
-
+      print("place order in funcprinvate", order)
       # Append the result
       close_orders.append(order)
 
@@ -124,7 +128,7 @@ def abort_all_positions(client):
     # Override json file with empty list
     bot_agents = []
     with open("bot_agents.json", "w") as f:
-      json.dump(bot_agents, f)
+      json.dump(bot_agents, f)  
 
     # Return closed orders
     return close_orders

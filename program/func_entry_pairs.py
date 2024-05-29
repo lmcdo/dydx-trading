@@ -1,4 +1,4 @@
-from constants import ZSCORE_THRESH, USD_PER_TRADE, USD_MIN_COLLATERAL
+from constants import ZSCORE_THRESH, USD_PER_TRADE, USD_MIN_COLLATERAL, TOKEN_FACTOR_10
 from func_utils import format_number
 from func_public import get_candles_recent
 from func_cointegration import calculate_zscore
@@ -48,21 +48,25 @@ def open_positions(client):
     # Get prices
     series_1 = get_candles_recent(client, base_market)
     series_2 = get_candles_recent(client, quote_market)
+ 
+   
 
     # Get ZScore
     if len(series_1) > 0 and len(series_1) == len(series_2):
+      print("inside get zscore")
       spread = series_1 - (hedge_ratio * series_2)
       z_score = calculate_zscore(spread).values.tolist()[-1]
 
       # Establish if potential trade
       if abs(z_score) >= ZSCORE_THRESH:
-
+        print("establish potential trade")
         # Ensure like-for-like not already open (diversify trading)
         is_base_open = is_open_positions(client, base_market)
         is_quote_open = is_open_positions(client, quote_market)
 
         # Place trade
         if not is_base_open and not is_quote_open:
+          print("inside plsce trade")
 
           # Determine side
           base_side = "BUY" if z_score < 0 else "SELL"
@@ -76,6 +80,17 @@ def open_positions(client):
           failsafe_base_price = float(base_price) * 0.05 if z_score < 0 else float(base_price) * 1.7
           base_tick_size = markets["markets"][base_market]["tickSize"]
           quote_tick_size = markets["markets"][quote_market]["tickSize"]
+
+          # Get size
+          base_quantity = 1 / base_price * USD_PER_TRADE
+          quote_quantity = 1 / quote_price * USD_PER_TRADE
+          ### -ADD HERE- ###
+          for particolari in TOKEN_FACTOR_10 :
+            if base_market== particolari :
+              base_quantity= float(int(base_quantity/10)*10) 
+            if quote_market== particolari :
+              quote_quantity= float(int(quote_quantity/10)*10) 
+          ####-THE REST REMAIN AS THE ORIGINAL VERSION -###
 
           # Format prices
           accept_base_price = format_number(accept_base_price, base_tick_size)
@@ -129,9 +144,11 @@ def open_positions(client):
 
             # Open Trades
             bot_open_dict = bot_agent.open_trades()
+            print ("bot_open_trades", bot_open_dict)
 
             # Guard: Handle failure
             if bot_open_dict == "failed":
+              print ("failed bot_open_trades", bot_open_trades)
               continue
 
             # Handle success in opening trades
@@ -144,6 +161,9 @@ def open_positions(client):
               # Confirm live status in print
               print("Trade status: Live")
               print("---")
+    else:
+      print("didn't happen")
+    
 
   # Save agents
   print(f"Success: Manage open trades checked")

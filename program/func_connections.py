@@ -29,8 +29,11 @@ def connect_dydx():
   )
 
   # Confirm client
+ 
+
   account = client.private.get_account()
   account_id = account.data["account"]["id"]
+
   quote_balance = account.data["account"]["quoteBalance"]
   print("Connection Successful")
   print("Account ID: ", account_id)

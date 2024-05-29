@@ -132,11 +132,13 @@ class BotAgent:
 
     # Ensure order is live before processing
     order_status_m1 = self.check_order_status_by_id(self.order_dict["order_id_m1"])
+    print("order_status_m1",order_status_m1)
 
     # Guard: Aborder if order failed
     if order_status_m1 != "live":
       self.order_dict["pair_status"] = "ERROR"
       self.order_dict["comments"] = f"{self.market_1} failed to fill"
+      print("self.order_dict[comments]",self.order_dict["comments"])
       return self.order_dict
 
     # Print status - opening second order
